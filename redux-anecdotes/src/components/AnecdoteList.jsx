@@ -3,7 +3,7 @@ import { voteAnecdote } from "../reducers/anecdoteReducer";
 
 const AnecdoteList = () => {
   const anecdotes = useSelector((state) => {
-    const filter = state.filter ? state.filter.toLowerCase() : '';  // Asegurarse de que el filtro no sea undefined
+    const filter = state.filter ? state.filter.toLowerCase() : ''; 
     return state.anecdotes
       .filter((anecdote) =>
         anecdote.content.toLowerCase().includes(filter)
