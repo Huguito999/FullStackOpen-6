@@ -1,21 +1,20 @@
 import { useDispatch, useSelector } from "react-redux";
-import { voteAnecdote } from "../reducers/anecdoteReducer";
+import { voteAnecdoteWithNotification } from "../reducers/anecdoteReducer";
 
 const AnecdoteList = () => {
-  const anecdotes = useSelector((state) => {
-    const filter = state.filter ? state.filter.toLowerCase() : ''; 
-    return state.anecdotes
-      .filter((anecdote) =>
-        anecdote.content.toLowerCase().includes(filter)
-      )
-      .sort((a, b) => b.votes - a.votes);
-  });
-  
+  const anecdotes = useSelector(({ anecdotes, filter }) =>
+    anecdotes.filter(
+      (anecdote) =>
+        typeof anecdote.content === "string" &&
+        anecdote.content.toLowerCase().includes(filter.toLowerCase())
+    )
+  );
+
   const dispatch = useDispatch();
 
   const handlevote = (id) => {
     console.log("vote", id);
-    dispatch(voteAnecdote(id));
+    dispatch(voteAnecdoteWithNotification(id));
   };
 
   return (
