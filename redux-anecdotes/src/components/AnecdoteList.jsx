@@ -3,11 +3,13 @@ import { voteAnecdoteWithNotification } from "../reducers/anecdoteReducer";
 
 const AnecdoteList = () => {
   const anecdotes = useSelector(({ anecdotes, filter }) =>
-    anecdotes.filter(
-      (anecdote) =>
-        typeof anecdote.content === "string" &&
-        anecdote.content.toLowerCase().includes(filter.toLowerCase())
-    )
+    anecdotes
+      .filter(
+        (anecdote) =>
+          typeof anecdote.content === "string" &&
+          anecdote.content.toLowerCase().includes(filter.toLowerCase())
+      )
+      .sort((a, b) => b.votes - a.votes)
   );
 
   const dispatch = useDispatch();

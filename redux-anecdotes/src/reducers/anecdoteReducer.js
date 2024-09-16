@@ -1,63 +1,58 @@
 import { createSlice } from "@reduxjs/toolkit";
+import anecdotesService from "../services/anecdotes";
 import { showNotification } from "./notificationReducer";
-
-const getId = () => (100000 * Math.random()).toFixed(0);
-
-const asObject = (anecdote) => {
-  return {
-    content: anecdote,
-    id: getId(),
-    votes: 0,
-  };
-};
-
-// const initialState = anecdotesAtStart.map(asObject);
 
 const anecdoteSlice = createSlice({
   name: "anecdotes",
   initialState: [],
   reducers: {
-    voteAnecdote(state, action) {
-      const id = action.payload;
-      const anecdoteToVote = state.find((anecdote) => anecdote.id === id);
-      if (anecdoteToVote) {
-        anecdoteToVote.votes += 1;
-      }
-    },
-    createAnecdote(state, action) {
-      state.push(action.payload)
+    setAnecdotes(state, action) {
+      return action.payload;
     },
     appendAnecdote(state, action) {
       state.push(action.payload);
     },
-    setAnecdotes(state, action) {
-      return action.payload
-    }
+    updateAnecdote(state, action) {
+      const updatedAnecdote = action.payload;
+      return state.map(anecdote =>
+        anecdote.id !== updatedAnecdote.id ? anecdote : updatedAnecdote
+      );
+    },
   },
 });
 
-export const { voteAnecdote, createAnecdote, appendAnecdote, setAnecdotes} = anecdoteSlice.actions;
+export const { setAnecdotes, appendAnecdote, updateAnecdote } =
+  anecdoteSlice.actions;
+
+export const initializeAnecdotes = () => {
+  return async (dispatch) => {
+    const anecdotes = await anecdotesService.getAll();
+    dispatch(setAnecdotes(anecdotes));
+  };
+};
 
 export const voteAnecdoteWithNotification = (id) => {
-  return (dispatch, getState) => {
-    dispatch(voteAnecdote(id));
+  return async (dispatch, getState) => {
+    const anecdote = getState().anecdotes.find((anecdote) => anecdote.id === id);
+    const updatedAnecdote = { ...anecdote, votes: anecdote.votes + 1 };
 
-    const anecdote = getState().anecdotes.find(
-      (anecdote) => anecdote.id === id
-    );
-    dispatch(showNotification(`You voted for "${anecdote.content}"`, 5000));
+    try {
+      const returnedAnecdote = await anecdotesService.update(updatedAnecdote);
+      dispatch(updateAnecdote(returnedAnecdote));
+      dispatch(showNotification(`You voted for "${returnedAnecdote.content}"`, 5000));
+    } catch (error) {
+      console.error('Error updating anecdote:', error);
+      dispatch(showNotification('Failed to vote', 5000));
+    }
   };
 };
 
 export const createAnecdoteWithNotification = (content) => {
-  return (dispatch) => {
-    const newAnecdote = {
-      content,
-      id: (Math.random() * 10000).toFixed(0),
-      votes: 0,
-    };
-    dispatch(createAnecdote(newAnecdote));
-    dispatch(showNotification(`You created "${content}"`, 5000));
+  return async (dispatch) => {
+    const newAnecdote = await anecdotesService.createNew(content);
+    const anecdoteContent = newAnecdote.content.content || newAnecdote.content;
+    dispatch(appendAnecdote({ ...newAnecdote, content: anecdoteContent }));
+    dispatch(showNotification(`You created "${anecdoteContent}"`, 5000));
   };
 };
 
