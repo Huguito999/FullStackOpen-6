@@ -1,25 +1,42 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { addAnecdote } from "../services/anecdotes"; 
+import { addAnecdote } from "../services/anecdotes";
+import { useNotification } from "./NotificationContext";
+
 const AnecdoteForm = () => {
   const queryClient = useQueryClient();
+  const [, dispatch] = useNotification();
 
   const newAnecdoteMutation = useMutation({
     mutationFn: addAnecdote,
     onSuccess: (newAnecdote) => {
       queryClient.invalidateQueries(["anecdotes"]);
+      dispatch({
+        type: "SHOW",
+        payload: `Anecdote '${newAnecdote.content}' added!`,
+      });
+
+      setTimeout(() => {
+        dispatch({ type: "HIDE" });
+      }, 5000);
+    },
+    onError: (error) => {
+      dispatch({
+        type: "SHOW",
+        payload: "Error: Anecdote must be at least 5 characters long.",
+      });
+
+      setTimeout(() => {
+        dispatch({ type: "HIDE" });
+      }, 5000);
     },
   });
 
   const onCreate = (event) => {
     event.preventDefault();
     const content = event.target.anecdote.value;
-    if (content.length < 5) {
-      alert("Anecdote must be at least 5 characters long.");
-      return;
-    }
 
     newAnecdoteMutation.mutate({ content, votes: 0 });
-    event.target.anecdote.value = "";
+    event.target.anecdote.value = '';
   };
 
   return (

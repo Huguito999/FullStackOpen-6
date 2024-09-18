@@ -8,16 +8,15 @@ const getAnecdotes = async () => {
 };
 
 const addAnecdote = async (newAnecdote) => {
+  if (newAnecdote.content.length < 5) {
+    throw new Error('Anecdote content must be at least 5 characters long');
+  }
   const response = await axios.post(baseUrl, newAnecdote);
   return response.data;
 };
 
 const updateAnecdote = async (anecdote) => {
-  const response = await axios.put(
-    `http://localhost:3001/anecdotes/${anecdote.id}`,
-    { ...anecdote, votes: anecdote.votes + 1 }
-  );
+  const response = await axios.put(`${baseUrl}/${anecdote.id}`, anecdote);
   return response.data;
 };
-
 export { getAnecdotes, addAnecdote, updateAnecdote };
